@@ -103,6 +103,8 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var metadata: UILabel!
     
+    var anImage: UILabel!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -119,29 +121,6 @@ class ViewController: UIViewController {
                 self.metadata.text = "\(imageDetail.metadata.name) (\(imageDetail.metadata.firstAppearance) - \(imageDetail.metadata.year))"
             }
         }
-        
-        // MARK: METHOD 2 - Using async properties
-        
-//        async {
-//            let character = Character(id: 1)
-//            if
-//                let metadata = try? await character.metadata,
-//                let image = try? await character.image{
-//                imageView.image = image
-//                self.metadata.text = "\(metadata.name) (\(metadata.firstAppearance) - \(metadata.year))"
-//            }
-//        }
-        
-        // MARK: Method 3 - Using Callbacks
-        
-//        downloadImageAndMetadata(imageNumber: 1) { imageDetail, error in
-//            DispatchQueue.main.async {
-//                if let imageDetail = imageDetail {
-//                    self.imageView.image = imageDetail.image
-//                    self.metadata.text =  "\(imageDetail.metadata.name) (\(imageDetail.metadata.firstAppearance) - \(imageDetail.metadata.year))"
-//                }
-//            }
-//        }
     }
     
 }
