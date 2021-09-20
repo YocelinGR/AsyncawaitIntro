@@ -20,31 +20,59 @@ struct DetailedImage {
     let metadata: ImageMetadata
 }
 
+class DetailedImageOperation: Operation {
+    let characterId: Int
+    var image: UIImage
+    var metadata: ImageMetadata
+    
+    init(characterId: Int) {
+        self.characterId = characterId
+    }
+    
+    override public func main() {
+        if self.isCancelled {
+            return
+        }
+        image = downloadImage(imageNumber: characterId)
+        metadata = downloadMetadata(imageNumber: characterId)
+    }
+    
+    private func  downloadImage(imageNumber: Int) -> UIImage {
+        let stringUrl: String = "https://www.andyibanez.com/fairesepages.github.io/tutorials/async-await/part1/\(imageNumber).png"
+        let imageUrl = URL(string: stringUrl)
+     
+        
+    }
+    
+    private func  downloadMetadata(imageNumber: Int) -> ImageMetadata {
+        
+    }
+}
+
 enum ImageDownloadError: Error {
     case badImage
     case invalidMetadata
 }
 
-struct Character {
+/*struct Character {
     let id: Int
     
     var metadata: ImageMetadata {
         get async throws {
-            let metadata = try await downloadMetadata(for: id)
+            let metadata = try downloadMetadata(for: id)
             return metadata
         }
     }
     
     var image: UIImage {
         get async throws {
-            return try await downloadImage(imageNumber: id)
+            return try downloadImage(imageNumber: id)
         }
     }
-}
+}*/
 
 // MARK: - Functions
-
-func downloadImageAndMetadata(imageNumber: Int) async throws -> DetailedImage {
+/*func downloadImageAndMetadata(imageNumber: Int) async throws -> DetailedImage {
     let image = try await downloadImage(imageNumber: imageNumber)
     let metadata = try await downloadMetadata(for: imageNumber)
     return DetailedImage(image: image, metadata: metadata)
@@ -69,9 +97,9 @@ func downloadMetadata(for id: Int) async throws -> ImageMetadata {
     }
     
     return try JSONDecoder().decode(ImageMetadata.self, from: data)
-}
+}*/
 
-func downloadImageAndMetadata(
+/*func downloadImageAndMetadata(
     imageNumber: Int,
     completionHandler: @escaping (_ image: DetailedImage?, _ error: Error?) -> Void
 ) {
@@ -93,7 +121,7 @@ func downloadImageAndMetadata(
         metadataTask.resume()
     }
     imageTask.resume()
-}
+}*/
 
 // MARK: - Main class
 
@@ -108,19 +136,16 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-    }
-    
-    @MainActor override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        // MARK: METHOD 1 - Using Async/Await
-        
-        Task {
-            if let imageDetail = try? await downloadImageAndMetadata(imageNumber: 1) {
-                self.imageView.image = imageDetail.image
-                self.metadata.text = "\(imageDetail.metadata.name) (\(imageDetail.metadata.firstAppearance) - \(imageDetail.metadata.year))"
+        let imageDetailedOperation = DetailedImageOperation(characterId: 1)
+        imageDetailedOperation.completionBlock = {
+            DispatchQueue.main.async {
+                self.imageView.image = imageDetailedOperation.image
+                self.metadata.text = "\(imageDetailedOperation.metadata.name) (\(imageDetailedOperation.metadata.firstAppearance) - \(imageDetailedOperation.metadata.year))"
             }
         }
+        let operationQueue = OperationQueue()
+        operationQueue.addOperation {
+            imageDetailedOperation
+        }
     }
-    
 }
