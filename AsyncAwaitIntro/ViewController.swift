@@ -95,6 +95,51 @@ func downloadImageAndMetadata(
     imageTask.resume()
 }
 
+// MARK: - Queue functions
+
+func downloadImage(
+    imageNumber: Int,
+    completionHandler: @escaping (_ image: UIImage?, _ error: Error?) -> Void
+) {
+    let imageUrl = URL(string: "https://www.andyibanez.com/fairesepages.github.io/tutorials/async-await/part1/\(imageNumber).png")!
+    let imageTask = URLSession.shared.dataTask(with: imageUrl) { data, response, error in
+        guard let data = data, let image = UIImage(data: data), (response as? HTTPURLResponse)?.statusCode == 200 else {
+            completionHandler(nil, ImageDownloadError.badImage)
+            return
+        }
+        completionHandler(image, nil)
+    }
+    imageTask.resume()
+}
+
+func downloadMetadata(
+    imageNumber: Int,
+    completionHandler: @escaping (_ image: ImageMetadata?, _ error: Error?) -> Void
+) {
+    let metadataUrl = URL(string: "https://www.andyibanez.com/fairesepages.github.io/tutorials/async-await/part1/\(imageNumber).json")!
+    let metadataTask = URLSession.shared.dataTask(with: metadataUrl) { data, response, error in
+    guard let data = data, let metadata = try? JSONDecoder().decode(ImageMetadata.self, from: data),  (response as? HTTPURLResponse)?.statusCode == 200 else {
+            completionHandler(nil, ImageDownloadError.invalidMetadata)
+            return
+    }
+        let imageMetadata = try? ImageMetadata(from: metadata as! Decoder)
+        completionHandler(imageMetadata, nil)
+    }
+    metadataTask.resume()
+}
+
+func downloadImageAndMetadataByQueue(
+    imageNumber: Int,
+    completionHandler: @escaping (_ image: DetailedImage?, _ error: Error?) -> Void
+) {
+    downloadImage(imageNumber: imageNumber, completionHandler: { image, error in
+        downloadMetadata(imageNumber: imageNumber, completionHandler: { detailedImage, error in
+            let detailedImage = DetailedImage(image: image!, metadata: detailedImage!)
+            DispatchQueue.main.async { completionHandler(detailedImage, nil) }
+        })
+    })
+}
+
 // MARK: - Main class
 
 class ViewController: UIViewController {
@@ -110,15 +155,19 @@ class ViewController: UIViewController {
     
     @MainActor override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        downloadImageAndMetadataByQueue(imageNumber: 1) { imageDetail, error in
+            self.imageView.image = imageDetail?.image
+            self.metadata.text = "\(imageDetail?.metadata.name ?? "") (\(imageDetail?.metadata.firstAppearance ?? "") - \(imageDetail?.metadata.year ?? 2021))"
+        }
         
         // MARK: METHOD 1 - Using Async/Await
         
-        Task {
+        /*Task {
             if let imageDetail = try? await downloadImageAndMetadata(imageNumber: 1) {
                 self.imageView.image = imageDetail.image
                 self.metadata.text = "\(imageDetail.metadata.name) (\(imageDetail.metadata.firstAppearance) - \(imageDetail.metadata.year))"
             }
-        }
+        }*/
         
         // MARK: METHOD 2 - Using async properties
         
