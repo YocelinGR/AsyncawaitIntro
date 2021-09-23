@@ -122,8 +122,7 @@ func downloadMetadata(
             completionHandler(nil, ImageDownloadError.invalidMetadata)
             return
     }
-        let imageMetadata = try? ImageMetadata(from: metadata as! Decoder)
-        completionHandler(imageMetadata, nil)
+        completionHandler(metadata, nil)
     }
     metadataTask.resume()
 }
@@ -140,6 +139,14 @@ func downloadImageAndMetadataByQueue(
     })
 }
 
+func doBackgroundWork(completionHandler: @escaping (_ image: DetailedImage?, _ error: Error?) -> Void) {
+    let backgroundWorker = DispatchQueue(label: "background_worker", qos: .background)
+    backgroundWorker.async {
+        downloadImageAndMetadataByQueue(imageNumber: 1) { imageDetail, error in
+            completionHandler(imageDetail, nil)
+        }
+    }
+}
 // MARK: - Main class
 
 class ViewController: UIViewController {
@@ -155,7 +162,7 @@ class ViewController: UIViewController {
     
     @MainActor override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        downloadImageAndMetadataByQueue(imageNumber: 1) { imageDetail, error in
+        doBackgroundWork() { imageDetail, error in
             self.imageView.image = imageDetail?.image
             self.metadata.text = "\(imageDetail?.metadata.name ?? "") (\(imageDetail?.metadata.firstAppearance ?? "") - \(imageDetail?.metadata.year ?? 2021))"
         }
