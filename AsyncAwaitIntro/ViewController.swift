@@ -157,47 +157,9 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-    }
-    
-    @MainActor override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
         doBackgroundWork() { imageDetail, error in
             self.imageView.image = imageDetail?.image
             self.metadata.text = "\(imageDetail?.metadata.name ?? "") (\(imageDetail?.metadata.firstAppearance ?? "") - \(imageDetail?.metadata.year ?? 2021))"
         }
-        
-        // MARK: METHOD 1 - Using Async/Await
-        
-        /*Task {
-            if let imageDetail = try? await downloadImageAndMetadata(imageNumber: 1) {
-                self.imageView.image = imageDetail.image
-                self.metadata.text = "\(imageDetail.metadata.name) (\(imageDetail.metadata.firstAppearance) - \(imageDetail.metadata.year))"
-            }
-        }*/
-        
-        // MARK: METHOD 2 - Using async properties
-        
-//        async {
-//            let character = Character(id: 1)
-//            if
-//                let metadata = try? await character.metadata,
-//                let image = try? await character.image{
-//                imageView.image = image
-//                self.metadata.text = "\(metadata.name) (\(metadata.firstAppearance) - \(metadata.year))"
-//            }
-//        }
-        
-        // MARK: Method 3 - Using Callbacks
-        
-//        downloadImageAndMetadata(imageNumber: 1) { imageDetail, error in
-//            DispatchQueue.main.async {
-//                if let imageDetail = imageDetail {
-//                    self.imageView.image = imageDetail.image
-//                    self.metadata.text =  "\(imageDetail.metadata.name) (\(imageDetail.metadata.firstAppearance) - \(imageDetail.metadata.year))"
-//                }
-//            }
-//        }
     }
-    
 }
